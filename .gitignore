@@ -1,5 +1,4 @@
 .env
 .bundle
-Gemfile.lock
 /vendor/bundle
 
