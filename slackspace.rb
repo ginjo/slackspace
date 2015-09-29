@@ -3,10 +3,13 @@ require "net/http"
 require "uri"
 require 'yaml'
 require 'json'
+require 'fog'
 
 module SlackSpace
-  
-  SLACK_URL=ENV['SLACK_URL']
+    
+  def endpoint
+    params[:endpoint] || ENV['SLACK_URL']
+  end
 
   def run_webhook
     body = request.body.read.to_s
@@ -67,11 +70,11 @@ module SlackSpace
     ]
   end
 
-  def push_webhook(payload)
-    uri = URI.parse(SLACK_URL)
+  def push_webhook(endpoint=endpoint, payload)
+    uri = URI.parse(endpoint)
     response = Net::HTTP.post_form(uri, {:payload=>payload.to_json})
 
-    # This longer way gives you more control.
+    # This longer series of steps gives you more control over the connection, but so far it isn't necessary.
     # uri = URI.parse(SLACK_URL)
     # http = Net::HTTP.new(uri.host, uri.port)
     # req = Net::HTTP::Post.new(uri.path, initheader = {'Content-Type' =>'application/json'})
