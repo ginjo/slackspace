@@ -1,5 +1,7 @@
 source 'https://rubygems.org/'
 
-gem 'rack'
+gem 'bundler'
+gem 'dotenv'
+gem 'sinatra'
 gem 'thin'
-
+#gem 'rack'
