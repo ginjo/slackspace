@@ -98,27 +98,68 @@ end
 
 class RackspaceApi
 
-  attr_accessor :credentials
+  attr_accessor :credentials, :tennant_id, :auth_token, :last_response, :auth_response
 
   def initialize(credentials=RACKSPACE_CREDENTIALS)
     @credentials = credentials
+    self
   end
   
-  def submit_api_request(url, http_method=:get, data=nil)
-    # uri = URI.parse(url)
-    # http = Net::HTTP.new(uri.host, uri.port)
-    # req = Net::HTTP::Post.new(uri.path, initheader = {'Content-Type' =>'application/json'})
-    # req.body = {:text=>body['alarm']['label'].to_s}.to_json
-    # response = http.request(req)
+  # Generic comprehensive single-method call for Net::HTTP
+  # Gist this?
+  def submit_request(url, http_method=:get, data=nil, headers={})
+    uri = URI.parse(url)
+    host = uri.host || 'localhost'
+    port = uri.port || 80
+    path = uri.path || '/'
+    connection = Net::HTTP.new(host, port)
+    connection.use_ssl=true if uri.scheme.to_s == 'https'
+    @last_response = connection.start do |http|
+      req = case http_method.to_sym
+        when :get; Net::HTTP::Get.new(path, headers)
+        when :post; Net::HTTP::Post.new(path, headers.merge({'Content-Type' =>'application/json'}))
+        when :put; Net::HTTP::Put.new(path, headers.merge({'Content-Type' =>'application/json'}))
+        when :delete; Net::HTTP::Delete.new(path, headers)
+      end
+      req.body = data
+      rsp = http.request(req)
+      #puts rsp.body
+      #puts rsp.to_hash.inspect
+      rsp
+    end
   end
   
-  def  authenticate()
-    # curl -s https://identity.api.rackspacecloud.com/v2.0/tokens -X 'POST' \
-    #      -d '{"auth":{"RAX-KSKEY:apiKeyCredentials":{"username":"'$USER_NAME'", "apiKey":"'$API_KEY'"}}}' \
-    #      -H "Content-Type: application/json" | python -m json.tool | tee rs_authenticate_response.json
-    #      
-    # TENANT_ID=`cat rs_authenticate_response.json | python -c 'import sys, json; print json.load(sys.stdin)["access"]["token"]["tenant"]["id"]'`
-    # AUTH_TOKEN=`cat rs_authenticate_response.json | python -c 'import sys, json; print json.load(sys.stdin)["access"]["token"]["id"]'`
+  # Wrap generic request with auth credentials, and return json.
+  def request_json(url, http_method=:get, data=nil, headers={})
+    from_json(submit_request(url, http_method, data, headers.merge({'X-Auth-Token'=>auth_token})).body)
+  end
+  
+  def from_json(txt)
+    JSON.load(txt)
+  end
+  
+  def auth_token
+    @auth_token || authenticate
+    @auth_token
+  end
+  
+  def tennant_id
+    @tennant_id || authenticate
+    @tennant_id
+  end
+    
+  # Authenticate Rackspace user and store tennatn_id & auth_token.
+  def  authenticate
+    resp = submit_request(
+      'https://identity.api.rackspacecloud.com/v2.0/tokens',
+      :post,
+      {auth:{"RAX-KSKEY:apiKeyCredentials" => {username:credentials[:rackspace_username], apiKey:credentials[:rackspace_api_key]}}}.to_json
+    )
+    @auth_response = resp
+    resp = from_json(@auth_response.body)
+    @tennant_id = resp["access"]["token"]["tenant"]["id"]
+    @auth_token = resp["access"]["token"]["id"]
+    resp
   end
   
   #   request_json () {
@@ -141,14 +182,16 @@ class RackspaceApi
   # 	fi
   #   }
   
-end
+end # RackspaceApi
+
+
 
 class RackspaceMonitoringApi < RackspaceApi
 
-  #   # List cloud monitor notifications
-  #   rs_list_notifications () {
-  #   	request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/notifications" | tee rs_list_notifications_response.json
-  #   }
+  # List cloud monitor notifications
+  def list_notifications
+  	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notifications")
+  end
   #   
   #   
   #   # Test cloud monitor notification, before creating it.
@@ -181,10 +224,10 @@ class RackspaceMonitoringApi < RackspaceApi
   #   	request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/notifications/$1/test" | tee rs_test_notification_response.json
   #   }
   #   
-  #   # List cloud monitor notification plans
-  #   rs_list_notification_plans () {
-  #   	request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/notification_plans" | tee rs_list_notification_plans_response.json
-  #   }
+  # List cloud monitor notification plans
+  def list_notification_plans
+  	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notification_plans")
+  end
   #   
   #   # Show cloud monitor notification (notification-plan-id)
   #   # Params: notification-plan-id
