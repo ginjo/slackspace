@@ -81,7 +81,7 @@ module SlackSpace
     # req.body = {:text=>body['alarm']['label'].to_s}.to_json
     # response = http.request(req)
 
-    logger.info "PUSH_WEBHOOK: #{response.code} #{response.message}"
+    puts "PUSH_WEBHOOK: #{response.code} #{response.message}"
     #puts "PUSH_WEBHOOK TO: #{SLACK_URL} RESPONSE: #{response.inspect} : #{response.message} PAYLOAD: #{payload.inspect}"
     response
   end
