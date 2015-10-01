@@ -7,43 +7,56 @@ require 'fog'
 
 module SlackSpace
     
+  # params[:endpoint] should be a valid Slack incoming-webhook URL.
   def endpoint
     params[:endpoint] || ENV['SLACK_URL']
   end
 
+  # Master call to process webhook.
   def run_webhook
     body = request.body.read.to_s
     #puts "RUN_WEBHOOK BODY #{body}"
-    webhook = parse_webhook(body)
+    webhook = JSON.load(body)
     payload = build_payload(webhook)
     push_webhook(payload)
   end
 
-  def parse_webhook(body)
-    webhook = JSON.load(body)
-  end
+  #   # Get webhook json payload as ruby object.
+  #   # This isn't really necessary.
+  #   def parse_webhook(body)
+  #     webhook = JSON.load(body)
+  #   end
   
+  # Build Slack incommin-webhook payload.
   def build_payload(webhook)
-    { :text => "Rackspace Notification *#{webhook['details']['state']}*",
+    { :text => "Rackspace Notification",
       :attachments => build_attachments(webhook),
       :username => "SlackSpace",
       :icon_emoji => ":ghost:"
     }
   end
   
+  # Build Slack incomming-webhook attachments.
   def build_attachments(webhook)
     state = webhook['details']['state']
-    level = case state
+    state_color = case state
       when 'CRITICAL'; 'danger'
       when 'WARNING'; 'warning'
       when 'OK'; 'good'
     end
+    target = webhook['details']['target']
+    timestamp = Time.at(webhook['details']['timestamp'].to_i/1000).to_s
+    entity_label = webhook['entity']['label']
+    entity_ip_address = webhook['entity']['ip_addresses']['default']
+    check_label = webhook['check']['label']
+    #check_details = webhook['check']['details'].to_yaml
+    alarm_label = webhook['alarm']['label']
     
     [
       {
         "fallback" => "Your browser does not support full display of the Rackspace alarm.",
   
-        "color" => level,
+        "color" => state_color,
   
         #"pretext" => "Optional text that appears above the attachment block",
   
@@ -51,18 +64,43 @@ module SlackSpace
         #"author_link" => "http://flickr.com/bobby/",
         #"author_icon" => "http://flickr.com/icons/bobby.jpg",
   
-        "title" => webhook['alarm']['label'].to_s,
+        "title" => state,
         #"title_link" => "https://api.slack.com/",
   
-        "text" => JSON.pretty_generate(webhook) #"Optional text that appears within the attachment",
+        #"text" => JSON.pretty_generate(webhook) #"Optional text that appears within the attachment",
   
-        # "fields" => [
-        #     {
-        #         "title" => "Priority",
-        #         "value" => "High",
-        #         "short" => false
-        #     }
-        # ],
+        "fields" => [
+          {
+            "title" => "Target",
+            "value" => target,
+            "short" => true
+          },
+          {
+            "title" => "Timestamp",
+            "value" => timestamp,
+            "short" => true
+          },
+          {
+            "title" => "Entity",
+            "value" => entity_label,
+            "short" => true
+          },
+          {
+            "title" => "IP",
+            "value" => entity_ip_address,
+            "short" => true
+          },
+          {
+            "title" => "Check",
+            "value" => check_label,
+            "short" => true
+          },
+          {
+            "title" => "Alarm",
+            "value" => alarm_label,
+            "short" => true
+          }
+        ],
   
         #"image_url" => "http://my-website.com/path/to/image.jpg",
         #"thumb_url" => "http://example.com/path/to/thumb.png"
@@ -70,6 +108,7 @@ module SlackSpace
     ]
   end
 
+  # Push formatted json webhook to Slack.
   def push_webhook(endpoint=endpoint, payload)
     uri = URI.parse(endpoint)
     response = Net::HTTP.post_form(uri, {:payload=>payload.to_json})
@@ -97,6 +136,11 @@ module SlackSpace
 end # SlackSpace
 
 
+# Query & Control Rackspace API
+#
+# This will allow users to manange Rackspace Monitoring notifications and notification plans,
+# services for which Rackspace still has no web interface.
+#
 class RackspaceApi
 
   attr_accessor :credentials, :tennant_id, :auth_token, :last_response, :auth_response
@@ -202,17 +246,17 @@ class RackspaceMonitoringApi < RackspaceApi
   end
   #
   #
-  #   # Test cloud monitor notification, before creating it.
-  #   rs_test_notification () {
-  #   	{ request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/test-notification" POST | tee rs_test_notification_response.json; } <<-EEOOFF
-  #   		{
-  #   		   "type": "webhook",
-  #   		   "details": {
-  #   		      "url": "https://slackspace.herokuapp.com/?endpoint=https://hooks.slack.com/services/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"
-  #   		   }
-  #   		}
-  #   	EEOOFF
-  #   }
+  # Test cloud monitor notification, before creating it.
+  def test_notification
+  	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/test-notification", :post, <<-EEOOFF)
+      {
+        "type": "webhook",
+        "details": {
+          "url": "http://rack05.cernesystems.com:8000/services/?endpoint=https://hooks.slack.com/services/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"
+        }
+      }
+  	EEOOFF
+  end
   #   
   #   # Create cloud monitor notification for webhook
   #   rs_create_notification () {
