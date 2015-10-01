@@ -2,7 +2,8 @@
 require './app'
 
 # This allows 'puts' in sinatra to work with heroku.
-$stdout.sync
+$stdout.sync = true
 
 # Run app.
 run App
+
