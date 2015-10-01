@@ -27,8 +27,12 @@ class App < Sinatra::Base
   get '/status' do
     "OK"
   end
+  
+  get '/' do
+    redirect to('https://github.com/ginjo/slackspace')
+  end
 
-  post '/*' do
+  post /\/services\/?/ do
     begin
       resp = run_webhook
       status resp.code
