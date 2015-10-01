@@ -81,7 +81,7 @@ module SlackSpace
     # req.body = {:text=>body['alarm']['label'].to_s}.to_json
     # response = http.request(req)
 
-    puts "PUSH_WEBHOOK: #{response.code} #{response.message}"
+    logger.info "PUSH_WEBHOOK: #{response.code} #{response.message}"
     #puts "PUSH_WEBHOOK TO: #{SLACK_URL} RESPONSE: #{response.inspect} : #{response.message} PAYLOAD: #{payload.inspect}"
     response
   end
@@ -94,7 +94,8 @@ module SlackSpace
   
   end
 
-end
+end # SlackSpace
+
 
 class RackspaceApi
 
@@ -193,7 +194,14 @@ class RackspaceMonitoringApi < RackspaceApi
   	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notifications")
   end
   #   
-  #   
+  #
+  # Show cloud monitor notification (notification-plan-id)
+  # Params: notification-plan-id
+  def show_notification(notification_id)
+  	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notifications/#{notification_id}")
+  end
+  #
+  #
   #   # Test cloud monitor notification, before creating it.
   #   rs_test_notification () {
   #   	{ request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/test-notification" POST | tee rs_test_notification_response.json; } <<-EEOOFF
@@ -219,21 +227,21 @@ class RackspaceMonitoringApi < RackspaceApi
   #   	EEOOFF
   #   }
   #   
-  #   # Test existing notification (notification-id)
-  #   rs_test_notifications () {
-  #   	request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/notifications/$1/test" | tee rs_test_notification_response.json
-  #   }
-  #   
+  # Test existing notification (notification-id)
+  def test_notifications(notification_id)
+  	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notifications/#{notification_id}/test", :post)
+  end
+
   # List cloud monitor notification plans
   def list_notification_plans
   	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notification_plans")
   end
-  #   
-  #   # Show cloud monitor notification (notification-plan-id)
-  #   # Params: notification-plan-id
-  #   rs_show_notification_plan () {
-  #   	request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/notification_plans/$1" | tee rs_show_notification_plan_response.json
-  #   }
+  
+  # Show cloud monitor notification (notification-plan-id)
+  # Params: notification-plan-id
+  def show_notification_plan(plan_id)
+  	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notification_plans/#{plan_id}")
+  end
   #   
   #   # Create cloud monitor notification plan (label, notify-id-critical, notify-id-warning, notify-id-ok)
   #   rs_create_notification_plan () {
