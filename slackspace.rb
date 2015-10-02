@@ -5,7 +5,7 @@ require 'yaml'
 require 'json'
 require 'fog'
 
-module SlackSpace
+module SlackSpaceHelpers
     
   # params[:endpoint] should be a valid Slack incoming-webhook URL.
   def endpoint
@@ -125,12 +125,14 @@ module SlackSpace
     response
   end
   
-  def rackspace_fog_monitoring_api
-    @monitoring ||= Fog::Monitoring.new(RACKSPACE_CREDENTIALS)
+  
+  
+  def rs_fog_monitor_api(auth = session[:credentials] || RACKSPACE_CREDENTIALS)
+    @rs_fog_monitor_api ||= Fog::Monitoring.new(auth)
   end
   
-  def rackspace_hg_monitoring_api
-  
+  def rs_monitor_api(auth = session[:credentials] || RACKSPACE_CREDENTIALS)
+    @rs_monitor_api ||= RackspaceMonitoringApi.new(auth)
   end
 
 end # SlackSpace
@@ -143,9 +145,9 @@ end # SlackSpace
 #
 class RackspaceApi
 
-  attr_accessor :credentials, :tennant_id, :auth_token, :last_response, :auth_response
+  attr_accessor :credentials, :last_response, :auth_response
 
-  def initialize(credentials=RACKSPACE_CREDENTIALS)
+  def initialize(credentials)
     @credentials = credentials
     self
   end
@@ -184,27 +186,30 @@ class RackspaceApi
   end
   
   def auth_token
-    @auth_token || authenticate
-    @auth_token
+    credentials[:auth_token] || authenticate[:auth_token]
   end
   
   def tennant_id
-    @tennant_id || authenticate
-    @tennant_id
+    credentials[:tennant_id] || authenticate[:tennant_id]
   end
     
-  # Authenticate Rackspace user and store tennatn_id & auth_token.
+  # Authenticate Rackspace user and store tennant_id & auth_token.
   def  authenticate
-    resp = submit_request(
-      'https://identity.api.rackspacecloud.com/v2.0/tokens',
-      :post,
-      {auth:{"RAX-KSKEY:apiKeyCredentials" => {username:credentials[:rackspace_username], apiKey:credentials[:rackspace_api_key]}}}.to_json
-    )
-    @auth_response = resp
-    resp = from_json(@auth_response.body)
-    @tennant_id = resp["access"]["token"]["tenant"]["id"]
-    @auth_token = resp["access"]["token"]["id"]
-    resp
+    if credentials[:auth_token] && credentials[:tennant_id]
+      #credentials
+    else
+      puts "RackspaceApi#authenticate"
+      resp = submit_request(
+        'https://identity.api.rackspacecloud.com/v2.0/tokens',
+        :post,
+        {auth:{"RAX-KSKEY:apiKeyCredentials" => {username:credentials[:rackspace_username], apiKey:credentials[:rackspace_api_key]}}}.to_json
+      )
+      @auth_response = resp
+      resp = from_json(@auth_response.body)
+      credentials[:tennant_id] = resp["access"]["token"]["tenant"]["id"]
+      credentials[:auth_token] = resp["access"]["token"]["id"]
+    end
+    credentials
   end
   
   #   request_json () {
