@@ -54,6 +54,12 @@ module SlackSpace
       @notifications = api.list_notifications
       erb :monitors
     end
+    
+    get "/notifications.xml" do
+      @notifications = rs_monitor_api.list_notifications
+      content_type "text/xml"
+      erb :'notifications.xml'
+    end
   
   
   end # App

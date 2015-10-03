@@ -125,6 +125,11 @@ module SlackSpaceHelpers
     response
   end
   
+  def plan_notifications(plan, type)
+    #@notifications['values'].find{|n| n['id'] == [plan['critical_state']].flatten[0].to_s }['label'] rescue plan['critical_state']
+    [plan["#{type}_state"]].flatten.collect{|id| @notifications['values'].find{|n| n['id'] == id}}
+  end
+  
   
   
   def rs_fog_monitor_api(auth = session[:credentials] || RACKSPACE_CREDENTIALS)
