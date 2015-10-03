@@ -1,0 +1,14 @@
+<?xml version ="1.0" encoding="utf-8"?>
+<rows>
+  <page>111</page>
+  <total>222</total>
+  <records>333</records>
+  <% @notifications['values'].each do |n| %>
+    <row id = '<%= n['id'] %>'>
+      <cell><%= n['label'] %></cell>
+      <cell><%= n['type'] %></cell>
+      <cell><%= n['details'] %></cell>
+      <cell><%= n['id'] %></cell>
+    </row>
+  <% end %>
+</rows>
