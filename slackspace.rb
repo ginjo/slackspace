@@ -1,15 +1,25 @@
-
 require "net/http"
 require "uri"
 require 'yaml'
 require 'json'
 require 'fog'
 
+
+RACKSPACE_CREDENTIALS = {
+  :provider           => 'Rackspace',
+  :rackspace_api_key  => ENV['RACKSPACE_API_KEY'],
+  :rackspace_username => ENV['RACKSPACE_USER_NAME'],
+  :rackspace_region   => ENV['RACKSPACE_REGION']
+}
+
+SLACK_WEBHOOK = "https://hooks.slack.com/services/"
+
+
 module SlackSpaceHelpers
     
   # params[:endpoint] should be a valid Slack incoming-webhook URL.
   def endpoint
-    params[:endpoint] || ENV['SLACK_URL']
+    "#{SLACK_WEBHOOK}#{params[:key]}"
   end
 
   # Master call to process webhook.
@@ -124,14 +134,15 @@ module SlackSpaceHelpers
     #puts "PUSH_WEBHOOK TO: #{SLACK_URL} RESPONSE: #{response.inspect} : #{response.message} PAYLOAD: #{payload.inspect}"
     response
   end
+
+
+  ## These are for working with Rackspace Monitoring API.
   
   def plan_notifications(plan, type)
     #@notifications['values'].find{|n| n['id'] == [plan['critical_state']].flatten[0].to_s }['label'] rescue plan['critical_state']
     [plan["#{type}_state"]].flatten.collect{|id| @notifications['values'].find{|n| n['id'] == id}}
   end
-  
-  
-  
+    
   def rs_fog_monitor_api(auth = session[:credentials] || RACKSPACE_CREDENTIALS)
     @rs_fog_monitor_api ||= Fog::Monitoring.new(auth)
   end

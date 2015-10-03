@@ -6,14 +6,6 @@ autoload :SlackSpaceHelpers, './slackspace.rb'
 
 
 
-RACKSPACE_CREDENTIALS = {
-  :provider           => 'Rackspace',
-  :rackspace_api_key  => ENV['RACKSPACE_API_KEY'],
-  :rackspace_username => ENV['RACKSPACE_USER_NAME'],
-  :rackspace_region   => ENV['RACKSPACE_REGION']
-}
-
-
 module SlackSpace
 
   class App < Sinatra::Base
@@ -34,7 +26,7 @@ module SlackSpace
     end
   
     #post /\/services\/?/ do
-    post '/services/?' do
+    post '/slack/webhook/?' do
       begin
         resp = run_webhook
         status resp.code
@@ -47,7 +39,7 @@ module SlackSpace
     
     # TODO: Store Auth-Token in session!!!
     #
-    get "/monitors" do
+    get "/rackspace/monitors" do
       api = rs_monitor_api
       @plans = api.list_notification_plans
       #@notifications = api.list_notifications
@@ -55,7 +47,7 @@ module SlackSpace
       erb :monitors
     end
     
-    get "/notifications.xml" do
+    get "/rackspace/notifications.xml" do
       @notifications = rs_monitor_api.list_notifications
       content_type "text/xml"
       erb :'notifications.xml'
