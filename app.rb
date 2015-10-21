@@ -3,7 +3,7 @@ Bundler.require
 Dotenv.load
 require 'sinatra/base'
 require 'thin'
-autoload :SlackSpaceHelpers, './slackspace.rb'
+require_relative 'slackspace.rb'
 
 
 module SlackSpace
