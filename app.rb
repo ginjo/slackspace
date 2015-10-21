@@ -2,8 +2,8 @@ require 'bundler'
 Bundler.require
 Dotenv.load
 require 'sinatra/base'
+require 'thin'
 autoload :SlackSpaceHelpers, './slackspace.rb'
-
 
 
 module SlackSpace
@@ -11,18 +11,17 @@ module SlackSpace
   class App < Sinatra::Base
     enable :sessions, :protection
     set :session_secret, ENV.fetch('SECRET')
-    
-    # WHATSTHIS?
-    #use Rack::Deflater
   
     helpers SlackSpaceHelpers
     
-    get '/status' do
-      "OK rs_monitor_api: #{rs_monitor_api.object_id} #{rs_monitor_api.credentials[:rackspace_username]} #{rs_monitor_api.credentials[:rackspace_region]}"
-    end
-    
+    # This is really just a placeholder for now.
     get '/' do
       redirect to('https://github.com/ginjo/slackspace')
+    end
+    
+    
+    get '/status' do
+      "OK"
     end
   
     #post /\/services\/?/ do
@@ -32,25 +31,47 @@ module SlackSpace
         status resp.code
         
       rescue
-        puts "WEBHOOK FAILED: #{$!}"
+        logger.warn "WEBHOOK FAILED: #{$!}"
         status 500
       end
+    end
+
+    # TODO: Complete the test actions.
+    get '/slack/test' do
+      erb :test
+    end
+    
+    post '/slack/test' do
+      halt unless (key=params['key'])
+      erb "Received your input"
+    end
+    
+
+
+    #####  EXPERIMENTAL - THIS SECTION IS NOT USED FOR PRODUCTION SLACKSPACE APP  #####
+    
+    get '/rackspace/status' do
+      "OK rs_monitor_api: #{rs_monitor_api.object_id} #{rs_monitor_api.credentials[:rackspace_username]} #{rs_monitor_api.credentials[:rackspace_region]}"
     end
     
     # TODO: Store Auth-Token in session!!!
     #
     get "/rackspace/monitors" do
-      api = rs_monitor_api
-      @plans = api.list_notification_plans
-      #@notifications = api.list_notifications
-      @notifications = api.list_notifications
-      erb :monitors
+      begin
+        api = rs_monitor_api
+        @plans = api.list_notification_plans
+        #@notifications = api.list_notifications
+        @notifications = api.list_notifications
+        erb :monitors, :layout=>false
+      rescue
+        "Rackspace monitors could not be accessed."
+      end
     end
     
     get "/rackspace/notifications.xml" do
       @notifications = rs_monitor_api.list_notifications
       content_type "text/xml"
-      erb :'notifications.xml'
+      erb :'notifications.xml', :layout=>false
     end
   
   
