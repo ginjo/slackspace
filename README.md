@@ -6,8 +6,6 @@ SlackSpace is a Ruby/Sinatra app that receives webhook notifications from Racksp
 translates them into something Slack can work with, and pushes them to a Slack
 incomming-webhook URL.
 
-## Usage
-
 You can download this app and run it on your own server, or you can use a live demo of this app running on Heroku.
 
 Note that this app does not save any of your information. Nor does it have any access to information in your Slack account(s) or your Rackspace account(s). This app is merely a translator running between Rackspace and Slack.
@@ -16,7 +14,7 @@ Note that this app does not save any of your information. Nor does it have any a
 
 * Create an incomming webhook for your slack team.
 * Copy the URI path of the webhook (just the part with the encrypted key, including the slashes within).
-* Create a webhook notification on Rackspace and point it to this url:
+* Create a webhook notification on Rackspace with this url:
 
         https://slackspace.herokuapp.com/slack/webhook/?key=<your/unique/incomming/webhook/key>
 

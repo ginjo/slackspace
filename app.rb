@@ -8,6 +8,8 @@ require_relative 'slackspace.rb'
 
 module SlackSpace
 
+  extend SlackSpaceHelpers
+
   class App < Sinatra::Base
     enable :sessions, :protection
     set :session_secret, ENV.fetch('SECRET')
@@ -27,7 +29,7 @@ module SlackSpace
     #post /\/services\/?/ do
     post '/slack/webhook/?' do
       begin
-        resp = run_webhook
+        resp = run_webhook(request.body.read.to_s)
         status resp.code
         
       rescue
