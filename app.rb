@@ -6,6 +6,10 @@ require 'thin'
 require_relative 'slackspace.rb'
 
 
+### TODO: Eliminate 'key=' param in rackspace-to-slackspace api. Use the uri-string as the 'id='  param.
+### TODO: 
+
+
 module SlackSpace
 
   extend SlackSpaceHelpers
