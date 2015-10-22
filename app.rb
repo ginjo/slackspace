@@ -75,9 +75,13 @@ module SlackSpace
     end
     
     get "/rackspace/notifications.xml" do
+      begin
       @notifications = rs_monitor_api.list_notifications
       content_type "text/xml"
       erb :'notifications.xml', :layout=>false
+      rescue
+        erb "ERROR: #{$!}"
+      end
     end
   
   
