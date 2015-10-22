@@ -49,6 +49,8 @@ module SlackSpace
     
     post '/slack/test' do
       halt unless (key=params['key'])
+      payload=File.read('mock_notification.json')
+      run_webhook(endpoint(key), payload)
       erb "Received your input"
     end
     

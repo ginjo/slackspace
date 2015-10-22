@@ -21,23 +21,34 @@ module SlackSpace
   module SlackSpaceHelpers
       
     # Should result in a valid Slack incoming-webhook URL.
-    def endpoint
-      "#{SLACK_WEBHOOK}#{params[:key]}"
+    def endpoint(key=params[:key])
+      "#{SLACK_WEBHOOK}#{key}"
     end
   
     # Master call to process webhook.
-    def run_webhook(body=request.body.read.to_s)
+    def run_webhook(endpoint=endpoint, body=request.body.read.to_s)
       #puts "RUN_WEBHOOK BODY #{body}"
       webhook = JSON.load(body)
       payload = build_payload(webhook)
-      push_webhook(payload)
+      push_webhook(endpoint=endpoint, payload)
     end
+    
+    # Push formatted json webhook to Slack.
+    def push_webhook(endpoint=endpoint, payload)
+      uri = URI.parse(endpoint)
+      response = Net::HTTP.post_form(uri, {:payload=>payload.to_json})
   
-    #   # Get webhook json payload as ruby object.
-    #   # This isn't really necessary.
-    #   def parse_webhook(body)
-    #     webhook = JSON.load(body)
-    #   end
+      # This longer series of steps gives you more control over the connection, but so far it isn't necessary.
+      # uri = URI.parse(SLACK_URL)
+      # http = Net::HTTP.new(uri.host, uri.port)
+      # req = Net::HTTP::Post.new(uri.path, initheader = {'Content-Type' =>'application/json'})
+      # req.body = {:text=>body['alarm']['label'].to_s}.to_json
+      # response = http.request(req)
+  
+      puts "PUSH_WEBHOOK: #{response.code} #{response.message}"
+      #puts "PUSH_WEBHOOK TO: #{SLACK_URL} RESPONSE: #{response.inspect} : #{response.message} PAYLOAD: #{payload.inspect}"
+      response
+    end
     
     # Build Slack incommin-webhook payload.
     def build_payload(webhook)
@@ -119,25 +130,15 @@ module SlackSpace
         }
       ]
     end
-  
-    # Push formatted json webhook to Slack.
-    def push_webhook(endpoint=endpoint, payload)
-      uri = URI.parse(endpoint)
-      response = Net::HTTP.post_form(uri, {:payload=>payload.to_json})
-  
-      # This longer series of steps gives you more control over the connection, but so far it isn't necessary.
-      # uri = URI.parse(SLACK_URL)
-      # http = Net::HTTP.new(uri.host, uri.port)
-      # req = Net::HTTP::Post.new(uri.path, initheader = {'Content-Type' =>'application/json'})
-      # req.body = {:text=>body['alarm']['label'].to_s}.to_json
-      # response = http.request(req)
-  
-      puts "PUSH_WEBHOOK: #{response.code} #{response.message}"
-      #puts "PUSH_WEBHOOK TO: #{SLACK_URL} RESPONSE: #{response.inspect} : #{response.message} PAYLOAD: #{payload.inspect}"
-      response
-    end
-  
-  
+
+    #   # Get webhook json payload as ruby object.
+    #   # This isn't really necessary.
+    #   def parse_webhook(body)
+    #     webhook = JSON.load(body)
+    #   end
+
+
+
     ## These are for working with Rackspace Monitoring API.
     
     def plan_notifications(plan, type)
@@ -157,6 +158,8 @@ module SlackSpace
   
   end # SlackSpaceHelpers
   
+
+
   
   # Query & Control Rackspace API
   # This is a generic abstract API class.
