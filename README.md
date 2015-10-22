@@ -3,29 +3,38 @@
 A Slack integration to send Rackspace Monitoring alarm notifications to a Slack channel.
 
 SlackSpace is a Ruby/Sinatra app that receives webhook notifications from Rackspace,
-translates them into something Slack can work with, and pushes them to a Slack
-incomming-webhook URL.
+translates them into something Slack can work with,
+and pushes them to a Slack incomming-webhook URL.
 
-You can download this app and run it on your own server, or you can use a live demo of this app running on Heroku.
+You can download this app and run it on your own server,
+or you can use a live demo of this app running on Heroku.
 
-Note that this app does not save any of your information. Nor does it have any access to information in your Slack account(s) or your Rackspace account(s). This app is merely a translator running between Rackspace and Slack.
+Note that this app:
+
+* Does not save any of your information.
+* Does not access information in your Slack accounts or Rackspace accounts.
+* Is a translator running between Rackspace notifications and Slack incoming webhooks.
+* Is currently ALPHA. Functionality is mostly stable, API is not.
 
 ### Use the Demo
 
-* Create an incomming webhook for your slack team.
-* Copy the URI path of the webhook (just the part with the encrypted key, including the slashes within).
+* Create an incoming webhook on Slack for your team.
+* Copy the URI path of the webhook, just the part with the encrypted key,
+  including the slashes within, but not the 'http://host.domain.com' part.
+  Ex: nfheus98Hnb/HYGGLPzy6/nNHJKC&BW6tgfcu
 * Create a webhook notification on Rackspace with this url:
 
         https://slackspace.herokuapp.com/slack/webhook/?key=<your/unique/incomming/webhook/key>
 
 * Attach the Rackspace notification to an alarm of one of your Rackspace monitors.
+  See the Rackspace Intelligence section of your account for API and help.
     
 
 ### Run this app on your own server
 
 * Download the app.
 * Bundle install
-* Bundle exec rackup - or whatever commands are necessary for your application server.
+* Bundle exec rackup, or whatever commands you use to boot apps.
 * Point your Rackspace notification webhook url to this app:
 
         https://your.custom.domain/slack/webhook/?key=<your/unique/incomming/webhook/key>

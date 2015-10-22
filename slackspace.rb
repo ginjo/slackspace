@@ -230,6 +230,8 @@ module SlackSpace
       credentials
     end
     
+    ##  SHELL SCRIPT
+    #
     #   request_json () {
     # 	if [ ! -t 0 ]; then
     # 		local data="`cat -`"
@@ -281,7 +283,8 @@ module SlackSpace
         }
     	EEOOFF
     end
-    #   
+    #   SHELL SCRIPT
+    #
     #   # Create cloud monitor notification for webhook
     #   rs_create_notification () {
     #   	{ request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/notifications" POST | tee rs_create_notification_response.json; } <<-EEOOFF
@@ -289,7 +292,7 @@ module SlackSpace
     #   		   "label": "cerneops.slack.com",
     #   		   "type": "webhook",
     #   		   "details": {
-    #   		      "url": "https://hooks.slack.com/services/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"
+    #   		      "url": "https://hooks.slack.com/services/SLACK/WEBHOOK/KEY"
     #   		   }
     #   		}
     #   	EEOOFF
@@ -310,7 +313,8 @@ module SlackSpace
     def show_notification_plan(plan_id)
     	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/notification_plans/#{plan_id}")
     end
-    #   
+    #   SHELL SCRIPT
+    #
     #   # Create cloud monitor notification plan (label, notify-id-critical, notify-id-warning, notify-id-ok)
     #   rs_create_notification_plan () {
     #   	{ request_json "https://monitoring.api.rackspacecloud.com/v1.0/$TENANT_ID/notification_plans" POST | tee rs_create_notification_plan_response.json; } <<-EEOOFF
