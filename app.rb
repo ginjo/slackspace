@@ -112,7 +112,7 @@ module SlackSpace
     #
     get "/rackspace/monitors" do
       begin
-        api = rs_monitor_api
+        api = rs_monitor_api(credentials[:rackspace])
         @plans = api.list_notification_plans
         #@notifications = api.list_notifications
         @notifications = api.list_notifications
