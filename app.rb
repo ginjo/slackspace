@@ -3,7 +3,11 @@ Bundler.require
 Dotenv.load
 require 'sinatra/base'
 require 'thin'
+require 'tilt/erb'
 require_relative 'slackspace.rb'
+
+# Start this app with 'bundle exec rackup -o0.0.0.0'
+# or 'bundle exec thin --threaded -p8000 start'
 
 
 ### TODO: Eliminate 'key=' param in rackspace-to-slackspace api. Use the uri-string as the 'id='  param.
@@ -21,20 +25,27 @@ module SlackSpace
     helpers SlackSpaceHelpers
     
     before do
+      ### Sessions or Credentials won't load properly unless this is here
+      credentials[:slack]
+      
       #puts "PARAMS #{params.to_yaml}"
       #puts "SESSION_CREDENTIALS #{session['credentials'].inspect}"
-      puts "LOADED_CREDENTIALS #{credentials.inspect}"
+      #puts "LOADED_CREDENTIALS #{credentials.inspect}"
       credentials[:slack] = {:webhook_key=>params['slack_key']} if !params['slack_key'].to_s.empty?
       credentials[:rackspace] = {
         :rackspace_region => params['rs_region'],
         :rackspace_username => params['rs_username'],
         :rackspace_api_key => params['rs_key'],
       } if (!params['rs_username'].to_s.empty? && !params['rs_key'].to_s.empty?)
+      
+      true
     end
     
     after do
       #puts "AFTER PACK_CREDENTIALS: #{@credentials.inspect}"
       pack_credentials
+      
+      true
     end
     
     # This is really just a placeholder for now.
@@ -54,7 +65,7 @@ module SlackSpace
         status resp.code
         
       rescue
-        logger.warn "WEBHOOK FAILED: #{$!}"
+        #logger.warn "WEBHOOK FAILED: #{$!}"
         puts "/slack/webhook error: #{$!}"
         status 500
       end
@@ -73,7 +84,8 @@ module SlackSpace
         payload=File.read('mock_notification.json')
         resp = run_webhook(endpoint(key), payload)
         status resp.code
-        resp.message
+        #resp.message
+        "<pre>#{resp.to_yaml}</pre>"
       when(params['test_rackspace'] && credentials[:rackspace] && credentials[:slack])
         slack_key = credentials[:slack][:webhook_key]
         api = rs_monitor_api(credentials[:rackspace])

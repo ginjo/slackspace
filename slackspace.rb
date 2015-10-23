@@ -42,7 +42,7 @@ module SlackSpace
   
     # Master call to process webhook.
     def run_webhook(_endpoint=endpoint, body)
-      puts "RUN_WEBHOOK endpoint #{_endpoint}"
+      #puts "RUN_WEBHOOK endpoint #{_endpoint}"
       #puts "RUN_WEBHOOK body #{body}"
       webhook = JSON.load(body)
       payload = build_payload(webhook)
@@ -54,7 +54,7 @@ module SlackSpace
       #puts "PUSH_WEBHOOK endpoint #{_endpoint}"
       #puts "PUSH_WEBHOOK payload #{payload}"
       uri = URI.parse(_endpoint)
-      puts "PUSH_WEBHOOK uri #{uri}"
+      #puts "PUSH_WEBHOOK uri #{uri}"
       response = Net::HTTP.post_form(uri, {:payload=>payload.to_json})
   
       # This longer series of steps gives you more control over the connection, but so far it isn't necessary.
@@ -64,7 +64,7 @@ module SlackSpace
       # req.body = {:text=>body['alarm']['label'].to_s}.to_json
       # response = http.request(req)
   
-      puts "PUSH_WEBHOOK response #{response.to_yaml}"
+      #puts "PUSH_WEBHOOK response #{response.to_yaml}"
       #puts "PUSH_WEBHOOK TO: #{SLACK_URL} RESPONSE: #{response.inspect} : #{response.message} PAYLOAD: #{payload.inspect}"
       response
     end
@@ -221,7 +221,7 @@ module SlackSpace
     # Wrap generic request with auth credentials, and return json.
     def request_json(url, http_method=:get, data=nil, headers={})
       resp = from_json(submit_request(url, http_method, data, headers.merge({'X-Auth-Token'=>auth_token})).body)
-      puts "REQUEST_JSON response #{resp.inspect}"
+      #puts "REQUEST_JSON response #{resp.inspect}"
       resp
     end
     
@@ -244,7 +244,7 @@ module SlackSpace
         credentials
       else
         #puts "RACKSPACE_AUTHENTICATE"
-        puts "RACKSPACE_AUTHENTICATE credentials #{credentials.inspect}"   # TODO: DISABLE THIS BEFORE PRODUCTION!
+        #puts "RACKSPACE_AUTHENTICATE credentials #{credentials.inspect}"   # TODO: DISABLE THIS BEFORE PRODUCTION!
         resp = submit_request(
           'https://identity.api.rackspacecloud.com/v2.0/tokens',
           :post,
@@ -303,7 +303,7 @@ module SlackSpace
     # Test cloud monitor notification, before creating it.
     # TODO: Make this input more generic: just the final URL.
     def test_notification(webhook_key=SLACK_WEBHOOK_KEY, base_url=SLACKSPACE_BASE_URL)
-      puts "TEST_NOTIFICATION WEBHOOK_KEY #{webhook_key}"
+      #puts "TEST_NOTIFICATION WEBHOOK_KEY #{webhook_key}"
     	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/test-notification", :post, <<-EEOOFF)
         {
           "type": "webhook",
