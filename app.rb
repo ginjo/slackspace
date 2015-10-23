@@ -20,6 +20,23 @@ module SlackSpace
   
     helpers SlackSpaceHelpers
     
+    before do
+      #puts "PARAMS #{params.to_yaml}"
+      #puts "SESSION_CREDENTIALS #{session['credentials'].inspect}"
+      puts "LOADED_CREDENTIALS #{credentials.inspect}"
+      credentials[:slack] = {:webhook_key=>params['slack_key']} if !params['slack_key'].to_s.empty?
+      credentials[:rackspace] = {
+        :rackspace_region => params['rs_region'],
+        :rackspace_username => params['rs_username'],
+        :rackspace_api_key => params['rs_key'],
+      } if (!params['rs_username'].to_s.empty? && !params['rs_key'].to_s.empty?)
+    end
+    
+    after do
+      #puts "AFTER PACK_CREDENTIALS: #{@credentials.inspect}"
+      pack_credentials
+    end
+    
     # This is really just a placeholder for now.
     get '/' do
       redirect to('https://github.com/ginjo/slackspace')
@@ -38,20 +55,37 @@ module SlackSpace
         
       rescue
         logger.warn "WEBHOOK FAILED: #{$!}"
+        puts "/slack/webhook error: #{$!}"
         status 500
       end
     end
 
     # TODO: Complete the test actions.
     get '/slack/test' do
+      #puts "SLACK/TEST credentials #{credentials.to_yaml}"  # TODO: Remove this for production!
       erb :test
     end
     
     post '/slack/test' do
-      halt unless (key=params['key'])
-      payload=File.read('mock_notification.json')
-      run_webhook(endpoint(key), payload)
-      erb "Received your input"
+      case
+      when(params['test_slack'] && credentials[:slack])
+        key = credentials[:slack][:webhook_key]
+        payload=File.read('mock_notification.json')
+        resp = run_webhook(endpoint(key), payload)
+        status resp.code
+        resp.message
+      when(params['test_rackspace'] && credentials[:rackspace] && credentials[:slack])
+        slack_key = credentials[:slack][:webhook_key]
+        api = rs_monitor_api(credentials[:rackspace])
+        credentials[:rackspace] = api.authenticate
+        #puts "SLACK/TEST api:"
+        #puts api.to_yaml
+        resp = api.test_notification(slack_key)
+        #resp = api.list_notifications
+        "<pre>#{resp.to_yaml}</pre>"
+      else
+        redirect back
+      end
     end
     
 

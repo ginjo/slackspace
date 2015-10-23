@@ -1,8 +1,17 @@
 <p><%#= @plans %></p>
 <p><%#= @notifications %></p>
-<h2>Test Slack Webhook</h2>
+<h2>Test Slackspace -> Slack</h2>
 <form action="test" method="post">
   <input type="hidden" name="_csrf" value="abcdef123456">
-  <input type="text" name="key" placeholder="enter your webhook key here">
-  <input type="submit" value="Submit">
-</form
+  <input type="text" name="slack_key" placeholder="your slack webhook key" size=64>
+  <input type="submit" name="test_slack" value="Test Slack">
+</form>
+
+<h2>Test Rackspace -> Slackspace -> Slack Webhook</h2>
+<form action="test" method="post">
+  <input type="text" name="slack_key" placeholder="your slack webhook key" size=64><br>
+  <input type="text" name="rs_region" placeholder="rackspace region" size=64><br>
+  <input type="text" name="rs_username" placeholder="rackspace username" size=64><br>
+  <input type="password" name="rs_key" placeholder="rackspace api key" size=64>
+  <input type="submit" name="test_rackspace" value="Test Rackspace">
+</form>

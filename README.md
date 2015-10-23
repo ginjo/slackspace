@@ -4,7 +4,7 @@ A Slack integration to send Rackspace Monitoring alarm notifications to a Slack 
 
 SlackSpace is a Ruby/Sinatra app that receives webhook notifications from Rackspace,
 translates them into something Slack can work with,
-and pushes them to a Slack incomming-webhook URL.
+and pushes them to a Slack incoming-webhook URL.
 
 You can download this app and run it on your own server,
 or you can use a live demo of this app running on Heroku.
@@ -24,7 +24,7 @@ Note that this app:
   Ex: nfheus98Hnb/HYGGLPzy6/nNHJKC&BW6tgfcu
 * Create a webhook notification on Rackspace with this url:
 
-        https://slackspace.herokuapp.com/slack/webhook/?key=<your/unique/incomming/webhook/key>
+        https://slackspace.herokuapp.com/slack/webhook/?key=<your/unique/incoming/webhook/key>
 
 * Attach the Rackspace notification to an alarm of one of your Rackspace monitors.
   See the Rackspace Intelligence section of your account for API and help.
@@ -37,7 +37,7 @@ Note that this app:
 * Bundle exec rackup, or whatever commands you use to boot apps.
 * Point your Rackspace notification webhook url to this app:
 
-        https://your.custom.domain/slack/webhook/?key=<your/unique/incomming/webhook/key>
+        https://your.custom.domain/slack/webhook/?key=<your/unique/incoming/webhook/key>
 
 
 ### License

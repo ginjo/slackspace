@@ -19,6 +19,21 @@ module SlackSpace
 
 
   module SlackSpaceHelpers
+  
+    def credentials
+      @credentials ||= (YAML.load(session['credentials']) rescue nil) || Hash.new
+      #puts "@CREDENTIALS #{@credentials.inspect}"
+      @credentials
+    end
+    
+    def credentials=(_credentials=nil)
+      @credentials = (_credentials || {})
+    end
+    
+    def pack_credentials
+      #puts "PACK_CREDENTIALS #{@credentials.inspect}"
+      session['credentials'] = @credentials.to_yaml
+    end
       
     # Should result in a valid Slack incoming-webhook URL.
     def endpoint(key=params[:key])
@@ -26,16 +41,20 @@ module SlackSpace
     end
   
     # Master call to process webhook.
-    def run_webhook(endpoint=endpoint, body=request.body.read.to_s)
-      #puts "RUN_WEBHOOK BODY #{body}"
+    def run_webhook(_endpoint=endpoint, body)
+      puts "RUN_WEBHOOK endpoint #{_endpoint}"
+      #puts "RUN_WEBHOOK body #{body}"
       webhook = JSON.load(body)
       payload = build_payload(webhook)
-      push_webhook(endpoint=endpoint, payload)
+      push_webhook(endpoint=_endpoint, payload)
     end
     
     # Push formatted json webhook to Slack.
-    def push_webhook(endpoint=endpoint, payload)
-      uri = URI.parse(endpoint)
+    def push_webhook(_endpoint=endpoint, payload)
+      #puts "PUSH_WEBHOOK endpoint #{_endpoint}"
+      #puts "PUSH_WEBHOOK payload #{payload}"
+      uri = URI.parse(_endpoint)
+      puts "PUSH_WEBHOOK uri #{uri}"
       response = Net::HTTP.post_form(uri, {:payload=>payload.to_json})
   
       # This longer series of steps gives you more control over the connection, but so far it isn't necessary.
@@ -45,13 +64,14 @@ module SlackSpace
       # req.body = {:text=>body['alarm']['label'].to_s}.to_json
       # response = http.request(req)
   
-      puts "PUSH_WEBHOOK: #{response.code} #{response.message}"
+      puts "PUSH_WEBHOOK response #{response.to_yaml}"
       #puts "PUSH_WEBHOOK TO: #{SLACK_URL} RESPONSE: #{response.inspect} : #{response.message} PAYLOAD: #{payload.inspect}"
       response
     end
     
-    # Build Slack incommin-webhook payload.
+    # Build Slack incoming-webhook payload.
     def build_payload(webhook)
+      #puts "BUILD_PAYLOAD webhook #{webhook}"
       { :text => "Rackspace Notification",
         :attachments => build_attachments(webhook),
         :username => "SlackSpace",
@@ -59,8 +79,9 @@ module SlackSpace
       }
     end
     
-    # Build Slack incomming-webhook attachments.
+    # Build Slack incoming-webhook attachments.
     def build_attachments(webhook)
+      #puts "BUILD_ATTACHMENTS webhook #{webhook}"
       state = webhook['details']['state']
       state_color = case state
         when 'CRITICAL'; 'danger'
@@ -147,12 +168,12 @@ module SlackSpace
     end
       
     # Get a Fot::Monitoring api object (from fog library).
-    def rs_fog_monitor_api(auth = (session[:credentials] rescue nil) || RACKSPACE_CREDENTIALS)
+    def rs_fog_monitor_api(auth = (credentials[:rackspace] || RACKSPACE_CREDENTIALS))
       @rs_fog_monitor_api ||= Fog::Monitoring.new(auth)
     end
     
     # Get a RackspaceMonitoringApi object (from local library).
-    def rs_monitor_api(auth = (session[:credentials] rescue nil) || RACKSPACE_CREDENTIALS)
+    def rs_monitor_api(auth = (credentials[:rackspace] || RACKSPACE_CREDENTIALS))
       @rs_monitor_api ||= RackspaceMonitoringApi.new(auth)
     end
   
@@ -199,7 +220,9 @@ module SlackSpace
     
     # Wrap generic request with auth credentials, and return json.
     def request_json(url, http_method=:get, data=nil, headers={})
-      from_json(submit_request(url, http_method, data, headers.merge({'X-Auth-Token'=>auth_token})).body)
+      resp = from_json(submit_request(url, http_method, data, headers.merge({'X-Auth-Token'=>auth_token})).body)
+      puts "REQUEST_JSON response #{resp.inspect}"
+      resp
     end
     
     def from_json(txt)
@@ -215,11 +238,13 @@ module SlackSpace
     end
       
     # Authenticate Rackspace user and store tennant_id & auth_token.
+    # TODO: store auth-token in http session, so don't have to keep getting it.
     def  authenticate
       if credentials[:auth_token] && credentials[:tennant_id]
-        #credentials
+        credentials
       else
-        puts "RackspaceApi#authenticate"
+        #puts "RACKSPACE_AUTHENTICATE"
+        puts "RACKSPACE_AUTHENTICATE credentials #{credentials.inspect}"   # TODO: DISABLE THIS BEFORE PRODUCTION!
         resp = submit_request(
           'https://identity.api.rackspacecloud.com/v2.0/tokens',
           :post,
@@ -276,12 +301,14 @@ module SlackSpace
     #
     #
     # Test cloud monitor notification, before creating it.
-    def test_notification(rackspace_generic_notification_test_url=nil)
+    # TODO: Make this input more generic: just the final URL.
+    def test_notification(webhook_key=SLACK_WEBHOOK_KEY, base_url=SLACKSPACE_BASE_URL)
+      puts "TEST_NOTIFICATION WEBHOOK_KEY #{webhook_key}"
     	request_json("https://monitoring.api.rackspacecloud.com/v1.0/#{tennant_id}/test-notification", :post, <<-EEOOFF)
         {
           "type": "webhook",
           "details": {
-            "url": "#{SLACKSPACE_BASE_URL}slack/webhook?key=#{SLACK_WEBHOOK_KEY}"
+            "url": "#{base_url}slack/webhook?key=#{webhook_key}"
           }
         }
     	EEOOFF
