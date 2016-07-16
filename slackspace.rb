@@ -167,7 +167,7 @@ module SlackSpace
       [plan["#{type}_state"]].flatten.collect{|id| @notifications['values'].find{|n| n['id'] == id}}
     end
       
-    # Get a Fot::Monitoring api object (from fog library).
+    # Get a Fog::Monitoring api object (from fog library).
     def rs_fog_monitor_api(auth = (credentials[:rackspace] || RACKSPACE_CREDENTIALS))
       @rs_fog_monitor_api ||= Fog::Monitoring.new(auth)
     end
@@ -189,8 +189,8 @@ module SlackSpace
   
     attr_accessor :credentials, :last_response, :auth_response
   
-    def initialize(credentials)
-      @credentials = credentials
+    def initialize(_credentials)
+      @credentials = _credentials
       self
     end
     
@@ -239,6 +239,7 @@ module SlackSpace
       
     # Authenticate Rackspace user and store tennant_id & auth_token.
     # TODO: store auth-token in http session, so don't have to keep getting it.
+    # Note 2016-07-15: might already be storing auth-token in http session.
     def  authenticate
       if credentials[:auth_token] && credentials[:tennant_id]
         credentials

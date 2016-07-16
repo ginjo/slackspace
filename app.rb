@@ -8,6 +8,16 @@ require_relative 'slackspace.rb'
 
 # Start this app with 'bundle exec rackup -o0.0.0.0'
 # or 'bundle exec thin --threaded -p8000 start'
+# or bundle exec thin start -p 8000 --threaded --ssl --ssl-key-file <path-to-key-file> --ssl-cert-file <path-to-cert-file>
+# Note: you need threaded or multiple instances to handle testing that goes to rackspace --> slackspace --> slack,
+# because the app needs to receive a rackspace webhook, while your http request is waiting for rackspace to respond.
+
+# To load this app in irb for testing
+# bundle exec irb -I./ -r app.rb
+
+# Note that loading specific rackspace or slack credentials from the .env file is intended for
+# private instances of this app running on tightly controlled servers. Otherwise, all credentials
+# should be managed thru rackspace, slack, or thru the web UI of this app.
 
 
 ### TODO: Eliminate 'key=' param in rackspace-to-slackspace api. Use the uri-string as the 'id='  param.
@@ -19,7 +29,7 @@ module SlackSpace
   extend SlackSpaceHelpers
 
   class App < Sinatra::Base
-    enable :sessions, :protection
+    enable :sessions, :protection, :logging
     set :session_secret, ENV.fetch('SECRET')
   
     helpers SlackSpaceHelpers
@@ -90,7 +100,8 @@ module SlackSpace
         slack_key = credentials[:slack][:webhook_key]
         api = rs_monitor_api(credentials[:rackspace])
         credentials[:rackspace] = api.authenticate
-        #puts "SLACK/TEST api:"
+        # Probably should disable these puts for production, as api object will contain sensitive data.
+        #puts "SLACK/TEST test_rackspace rs_monitor_api:"
         #puts api.to_yaml
         resp = api.test_notification(slack_key)
         #resp = api.list_notifications
