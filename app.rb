@@ -94,9 +94,9 @@ module SlackSpace
         #payload=File.read('mock_notification.json')
         timestamp_integer = Time.now.to_i
         payload = erb(:'mock_rackspace_notification.json', :locals=>{:timestamp_integer=>timestamp_integer}, :layout=>false)
-        puts "PAYLOAD:"
-        puts payload.to_s
-        puts "END_PAYLOAD"
+        #puts "PAYLOAD:"
+        #puts payload.to_s
+        #puts "END_PAYLOAD"
         resp = run_webhook(endpoint(key), payload)
         status resp.code
         #resp.message
