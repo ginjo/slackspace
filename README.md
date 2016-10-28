@@ -1,30 +1,14 @@
 # SlackSpace
 
-A Slack integration to send Rackspace Monitoring alarm notifications to a Slack channel.
-
-SlackSpace is a Ruby/Sinatra app that receives webhook notifications from Rackspace,
-translates them into something Slack can work with,
-and pushes them to a Slack incoming-webhook URL.
-
-## Coming Soon
-
-The SlackSpace demo at heroku is developing into a full-fledged service. It will create Rackspace/Slack integrations entirely from within the SlackSpace web app. SlackSpace will tap into the API services of Slack and Rackspace to manage the integration, so you won't need to create Slack incoming webhooks or copy-paste ugly urls into your Rackspace notifications any more.
-
-Integrations created with this legacy app will continue to work, and I will leave the current code in this repo up on Github. Keep a watch here for more info on the upcoming SlackSpace service.
+[SlackSpace](https://slackspace.herokuapp.com/) is a web service that recieves webhook notifications from Rackspace monitors, translates the payload, and pushes the notifications to your Slack team on the channel of your choice. Setup is easy: No need to create incoming webhooks for your Slack team any more. Just sign in and pick the channels you want to receive notifications on. To learn more or try it out, [go here](https://slackspace.herokuapp.com/).
 
 ## Legacy App
 
-You can download this app and run it on your own server,
-or you can use a live demo of this app running on Heroku.
+The SlackSpace open-source app contains the core translation code to handle forwarding of webhooks between Slack and Rackspace. The open source code should still work just fine, however it will not be maintained any further. Integrations created with the demo app on Heroku will continue to work with the SlackSpace service.
 
-Note that this app:
+The documentation that follows is for the open-source app and/or for the legacy demo app. For information and help with the new SlackSpace service, head on over to the [main site](https://slackspace.herokuapp.com/).
 
-* Does not save any of your information.
-* Does not access information in your Slack accounts or Rackspace accounts.
-* Is a translator running between Rackspace notifications and Slack incoming webhooks.
-* Is currently ALPHA. Functionality is mostly stable, API is not.
-
-### Use the Demo
+### Using the Demo
 
 * Create an incoming webhook on Slack for your team.
 * Copy the URI path of the webhook, just the part with the encrypted key,
@@ -38,7 +22,7 @@ Note that this app:
   See the Rackspace Intelligence section of your account for API and help.
     
 
-### Run this app on your own server
+### Running this app on your own server
 
 * Download the app.
 * Bundle install
